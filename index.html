@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultimate To-Do Pro</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:'Segoe UI',sans-serif;
+  background:linear-gradient(135deg,#0f2027,#2c5364);
+  min-height:100vh;
+  opacity:0;
+  transition:0.8s;
+}
+
+.container{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+  padding:20px;
+}
+
+header{
+  grid-column:span 2;
+  text-align:center;
+  color:#fff;
+  font-size:30px;
+}
+
+.card{
+  background:rgba(255,255,255,0.1);
+  backdrop-filter:blur(10px);
+  color:white;
+  padding:20px;
+  border-radius:15px;
+  transition:0.3s;
+}
+
+.card:hover{
+  transform:translateY(-8px) scale(1.02);
+  box-shadow:0 20px 40px rgba(0,0,0,0.4);
+}
+
+.input-box{display:flex;gap:10px}
+
+input{
+  flex:1;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+}
+
+input:focus{
+  outline:none;
+  box-shadow:0 0 10px cyan;
+}
+
+button{
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  background:#00c6ff;
+  color:black;
+  position:relative;
+  overflow:hidden;
+}
+
+button:hover{background:#0072ff;color:white}
+
+button::after{
+  content:"";
+  position:absolute;
+  background:rgba(255,255,255,0.5);
+  width:100px;height:100px;
+  border-radius:50%;
+  transform:scale(0);
+}
+
+button:active::after{
+  transform:scale(2);
+  opacity:0;
+  transition:0.5s;
+}
+
+ul{list-style:none;padding:0;margin-top:10px}
+
+li{
+  background:rgba(255,255,255,0.2);
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:10px;
+  display:flex;
+  justify-content:space-between;
+  animation:fade 0.4s;
+  transition:0.3s;
+}
+
+li:hover{transform:scale(1.03)}
+
+@keyframes fade{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.completed{
+  text-decoration:line-through;
+  background:#00ffcc;
+  color:black;
+}
+
+.progress{
+  height:10px;
+  background:#444;
+  border-radius:5px;
+  margin-top:10px;
+}
+
+.progress-bar{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,cyan,blue);
+  transition:0.5s;
+}
+
+.filters button{margin:5px;background:#ccc;color:black}
+.filters .active{background:#00c6ff;color:black}
+
+@media(max-width:768px){
+  .container{grid-template-columns:1fr}
+  header{grid-column:span 1}
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<header>⚡ Ultimate To-Do Dashboard</header>
+
+<div class="card">
+<h3>Add Task</h3>
+<div class="input-box">
+<input id="taskInput" placeholder="Enter task...">
+<button onclick="addTask()">Add</button>
+</div>
+
+<div class="filters">
+<button onclick="setFilter('all')" class="active">All</button>
+<button onclick="setFilter('active')">Active</button>
+<button onclick="setFilter('completed')">Done</button>
+</div>
+
+<div class="progress"><div id="bar" class="progress-bar"></div></div>
+</div>
+
+<div class="card">
+<h3>Tasks</h3>
+<ul id="list"></ul>
+</div>
+
+</div>
+
+<script>
+let tasks=JSON.parse(localStorage.getItem('tasks'))||[];
+let filter='all';
+
+window.onload=()=>document.body.style.opacity=1;
+
+function save(){localStorage.setItem('tasks',JSON.stringify(tasks))}
+
+function addTask(){
+ let input=document.getElementById('taskInput');
+ if(!input.value.trim())return;
+ tasks.push({text:input.value,done:false});
+ input.value='';
+ save();render();
+}
+
+function toggleTask(i){
+ tasks[i].done=!tasks[i].done;
+ save();render();
+}
+
+function removeTask(i){
+ tasks.splice(i,1);
+ save();render();
+}
+
+function setFilter(f){
+ filter=f;
+ document.querySelectorAll('.filters button').forEach(b=>b.classList.remove('active'));
+ event.target.classList.add('active');
+ render();
+}
+
+function render(){
+ let list=document.getElementById('list');
+ list.innerHTML='';
+
+ let filtered=tasks.filter(t=>{
+  if(filter==='active')return !t.done;
+  if(filter==='completed')return t.done;
+  return true;
+ });
+
+ filtered.forEach((t,i)=>{
+  let li=document.createElement('li');
+  if(t.done)li.classList.add('completed');
+
+  li.innerHTML=`
+  <span>${t.text}</span>
+  <div>
+  <button onclick="toggleTask(${i})">✔</button>
+  <button onclick="removeTask(${i})">✖</button>
+  </div>`;
+
+  list.appendChild(li);
+ });
+
+ updateProgress();
+}
+
+function updateProgress(){
+ let done=tasks.filter(t=>t.done).length;
+ let total=tasks.length;
+ let percent=total?(done/total)*100:0;
+ document.getElementById('bar').style.width=percent+'%';
+}
+
+render();
+</script>
+
+</body>
+</html>
